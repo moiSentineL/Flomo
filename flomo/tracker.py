@@ -2,6 +2,7 @@ import ctypes
 import datetime
 import sqlite3
 from typing import Tuple
+import csv
 
 from rich.console import Console
 from rich.table import Table
@@ -107,7 +108,24 @@ class Tracker:
             )
             print(f'Name updated to "{name}" for session {session_id}')
         self.conn.commit()
+    
+    def export(self, file_path: str):
+        """
+        Exports all sessions in the database to a CSV file.
+        Args:
+            file_path (str): The path to save the CSV file.
+        """
+        # Fetch all sessions from the database
+        sessions = self.get_sessions()
 
+        # Define the column headers
+        headers = ["id", "date_time", "tag", "name", "total_time"]
+
+        # Write to CSV
+        with open(file_path, mode="w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(headers)  # Write headers
+            writer.writerows(sessions)  # Write session rows
 
 def end_session(session_id: str):
     db = Tracker()
@@ -118,7 +136,6 @@ def end_session(session_id: str):
 def show_sessions():
     db = Tracker()
     sessions = db.get_sessions()
-
     table = Table(title="You like this?")
 
     table.add_column("ID", style="cyan", justify="right")
@@ -126,7 +143,6 @@ def show_sessions():
     table.add_column("Tag", style="green")
     table.add_column("Name", style="yellow")
     table.add_column("Duration", style="red", justify="right")
-
     for session in sessions:
         _id, datetime, tag, name, duration = session
         color = helpers.tag_color(tag)
@@ -138,3 +154,6 @@ def show_sessions():
     console.print(table)
 
     db.conn.close()
+
+
+
